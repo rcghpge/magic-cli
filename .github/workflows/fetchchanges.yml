@@ -13,15 +13,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0  # Fetch full history to handle merges properly
+
       - name: Configure Git Identity
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
+
       - name: Fetch and Merge Upstream
         run: |
           git remote add upstream https://github.com/modular/magic-docker.git
           git fetch upstream
-          git merge upstream/main --allow-unrelated-histories
+          git merge upstream/main --allow-unrelated-histories -m "Sync with upstream"
+          
+          # Resolve conflicts by keeping the fork's version of specific files
+          git checkout HEAD -- LICENSE README.md
+          git add LICENSE README.md
+          git commit -m "Preserve fork's LICENSE and README.md"
+          
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
